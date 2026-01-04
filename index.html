@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tỏ tình bằng nhận diện khuôn mặt 💖</title>
+  <title>Nhận Diện Vợ Yeuu 💖</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
 
@@ -57,10 +57,10 @@
 <body>
 
 <div class="card" id="card">
-  <h1>📷 Nhìn vào camera nhé</h1>
-  <p>Nhận diện khuôn mặt để mở bức thư bí mật 💌</p>
+  <h1>📷 Xác Nhận Vợ Yeuu</h1>
+  <p>Bức Thư Dành Cho Em💖</p>
   <video id="video" autoplay muted playsinline></video>
-  <div class="status" id="status">Chưa bắt đầu</div>
+  <div class="status" id="status">Khuôn Mặt Xinh Đẹp Đâu Roii</div>
   <button id="start">Bắt đầu nhận diện</button>
 </div>
 
@@ -91,7 +91,7 @@ async function startCamera(){
 
 // load model
 async function loadModels(){
-  statusText.innerText = '⏳ Đang tải model...';
+  statusText.innerText = '⏳ Đang Ngắm Nhìn Nhan Sắc🥺...';
   const MODEL_URL =
     'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
 
@@ -102,7 +102,7 @@ async function loadModels(){
 
 // load ảnh được phép
 async function loadAuthorizedFace(){
-  statusText.innerText = '📸 Đang phân tích ảnh mẫu...';
+  statusText.innerText = '📸 Đang Say Mê Nhan Sắc Này🥺...';
 
   const img = await faceapi.fetchImage(AUTH_IMAGE);
   const detection = await faceapi
@@ -139,7 +139,7 @@ btn.onclick = async ()=>{
     await loadAuthorizedFace();
     await startCamera();
 
-    statusText.innerText = '🙂 Đang quét khuôn mặt...';
+    statusText.innerText = 'Bắt Đầu Xác Nhận...';
 
     const interval = setInterval(async ()=>{
       const result = await faceapi
@@ -298,4 +298,5 @@ function unlock(){
 </body>
 
 </html>
+
 
