@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tỏ tình bằng nhận diện khuôn mặt 💖</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body{
+      margin:0;
+      font-family:Quicksand;
+      background:#ffdfe6;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      min-height:100vh;
+      color:#b3295a
+    }
+    .card{
+      background:#ffe6ec;
+      border-radius:18px;
+      padding:24px;
+      max-width:420px;
+      width:100%;
+      text-align:center;
+      box-shadow:0 10px 30px rgba(0,0,0,.08);
+      transition:opacity .8s ease
+    }
+    h1{color:#ff6b9a}
+    video{
+      width:100%;
+      border-radius:12px;
+      margin-top:12px
+    }
+    button{
+      margin-top:14px;
+      padding:10px 18px;
+      border-radius:10px;
+      border:none;
+      background:#ff6b9a;
+      color:#fff;
+      font-weight:700;
+      font-size:16px;
+      cursor:pointer
+    }
+    .status{
+      margin-top:10px;
+      font-size:14px;
+      opacity:.85
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="card" id="card">
+  <h1>📷 Nhìn vào camera nhé</h1>
+  <p>Nhận diện khuôn mặt để mở bức thư bí mật 💌</p>
+  <video id="video" autoplay muted playsinline></video>
+  <div class="status" id="status">Chưa bắt đầu</div>
+  <button id="start">Bắt đầu nhận diện</button>
+</div>
+
+<!-- face-api -->
+<script src="https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js"></script>
+
+<script>
+const video = document.getElementById('video');
+const btn = document.getElementById('start');
+const card = document.getElementById('card');
+const statusText = document.getElementById('status');
+
+const AUTH_IMAGE = '1.jpg';
+let faceMatcher;
+let bgMusic;
+
+// bật camera
+async function startCamera(){
+  const stream = await navigator.mediaDevices.getUserMedia({ video:true });
+  video.srcObject = stream;
+  await new Promise(resolve=>{
+    video.onloadedmetadata = ()=>{
+      video.play();
+      resolve();
+    }
+  });
+}
+
+// load model
+async function loadModels(){
+  statusText.innerText = '⏳ Đang tải model...';
+  const MODEL_URL =
+    'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
+
+  await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+  await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+  await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+}
+
+// load ảnh được phép
+async function loadAuthorizedFace(){
+  statusText.innerText = '📸 Đang phân tích ảnh mẫu...';
+
+  const img = await faceapi.fetchImage(AUTH_IMAGE);
+  const detection = await faceapi
+    .detectSingleFace(
+      img,
+      new faceapi.TinyFaceDetectorOptions({
+        inputSize:224,
+        scoreThreshold:0.5
+      })
+    )
+    .withFaceLandmarks()
+    .withFaceDescriptor();
+
+  if(!detection){
+    alert('❌ Không nhận diện được khuôn mặt trong ảnh 1.jpg');
+    throw new Error('No face');
+  }
+
+  const labeled = new faceapi.LabeledFaceDescriptors(
+    'my-love',
+    [detection.descriptor]
+  );
+
+  faceMatcher = new faceapi.FaceMatcher(labeled, 0.6);
+}
+
+// nút bắt đầu
+btn.onclick = async ()=>{
+  btn.disabled = true;
+  btn.innerText = 'Đang nhận diện...';
+
+  try{
+    await loadModels();
+    await loadAuthorizedFace();
+    await startCamera();
+
+    statusText.innerText = '🙂 Đang quét khuôn mặt...';
+
+    const interval = setInterval(async ()=>{
+      const result = await faceapi
+        .detectSingleFace(
+          video,
+          new faceapi.TinyFaceDetectorOptions({
+            inputSize:224,
+            scoreThreshold:0.5
+          })
+        )
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+
+      if(result && faceMatcher){
+        const match = faceMatcher.findBestMatch(result.descriptor);
+        if(match.label === 'my-love'){
+          clearInterval(interval);
+          unlock();
+        }
+      }
+    },700);
+
+  }catch(e){
+    alert('Có lỗi xảy ra, mở Console để xem');
+    console.error(e);
+  }
+};
+
+// mở khóa + phát nhạc
+function unlock(){
+  statusText.innerText = '💖 Đã nhận diện thành công';
+
+  if(!bgMusic){
+    bgMusic = new Audio('mucsic.mp3'); // 👈 đổi nhạc tại đây
+    bgMusic.loop = true;
+    bgMusic.volume = 0.6;
+    bgMusic.play();
+  }
+
+  card.style.opacity = 0;
+  setTimeout(()=>{
+    card.innerHTML = `
+  <h1>💌 Bức Thư Dành Riêng Cho Em 💖</h1>
+
+  <p style="font-size:18px; line-height:1.7">
+    Hello em bé của anh,<br><br>
+
+    Khi em bé đọc xong bức thư này  
+    thì cho anh một câu trả lời nha 🥺❤️<br><br>
+
+    Anh đã suy nghĩ rất nhiều trước khi nói những lời này.  
+    Không phải vì anh do dự về cảm xúc của mình,  
+    mà vì anh không biết phải diễn tả nó như thế nào cho đủ đầy,  
+    cho tử tế và chân thành nhất,  
+    theo cách xứng đáng nhất với em.<br><br>
+
+    Trời ơi… hồi hộp quá 😖💖<br><br>
+
+    Anh vẫn nhớ rất rõ ngày mà chúng ta biết đến nhau.  
+    Chỉ là một buổi anh live stream muộn đến 2 giờ sáng  
+    và vô tình em bước vào.  
+    Hmm… lúc đó chẳng có gì quá đặc biệt cả.<br><br>
+
+    Nhưng rồi sau một thời gian khá lâu,  
+    khi chúng ta chơi với nhau, tâm sự với nhau  
+    và hiểu rất nhiều câu chuyện của nhau,  
+    anh không biết từ khi nào  
+    anh lại để ý đến em bé nhiều hơn.<br><br>
+
+    Có lẽ anh bị thu hút bởi em 💖<br>  
+    một cô gái đã chịu rất nhiều tổn thương và tủi thân,  
+    từ những vết thương trong tình yêu  
+    cho đến cả tình thương gia đình.<br><br>
+
+    Và từ lúc đó,  
+    anh mới quyết định đến để chữa lành cho em,  
+    rồi yêu em lúc nào không hay…<br><br>
+
+    Anh chưa từng quên những lúc anh yếu lòng nhất,  
+    những lần anh khóc,  
+    những lúc anh thật sự không còn đủ mạnh mẽ để bước tiếp,  
+    thậm chí là buông xuôi…<br><br>
+
+    Em không hỏi quá nhiều,  
+    không phán xét,  
+    chỉ lặng lẽ lắng nghe anh nói hết  
+    những uất ức, tủi thân và tiêu cực mà anh phải chịu.<br><br>
+
+    Em dỗ dành anh bằng sự dịu dàng  
+    và chân thành nhất.  
+    Nó không hoa mỹ,  
+    nhưng đủ để anh đứng vững lại.<br><br>
+
+    Rồi em khóc…  
+    Lúc đó anh không hiểu vì sao em lại khóc theo anh nữa.  
+    Và em nói:  
+    <i>“Tại em xót cho anh…”</i><br><br>
+
+    Chính khoảnh khắc đó,  
+    anh nhận ra có điều gì đó  
+    đang dần hình thành giữa chúng ta.<br><br>
+
+    Sau đó anh là người dỗ em.  
+    Không phải vì nghĩa vụ,  
+    mà vì anh không muốn thấy em buồn,  
+    và anh muốn em cười thật nhiều.<br><br>
+
+    Vậy nên…  
+    mắt đẹp thì không được khóc,  
+    môi xinh thì không được mếu nhé 💗<br><br>
+
+    Anh muốn nói với em rằng,  
+    em không chỉ là người luôn ở bên anh,  
+    mà anh cũng muốn trở thành người ở bên em,  
+    theo cách nghiêm túc và chân thành nhất.<br><br>
+
+    Thật ra anh muốn nói với em điều này từ lâu rồi,  
+    nhưng vì một vài chuyện của chúng ta  
+    nên anh đã trì hoãn đến hôm nay.<br><br>
+
+    Xin lỗi em bé vì đã để em đợi lâu nhé… 🥺<br><br>
+
+    Bức Thư Này,  
+    anh chỉ muốn em biết rằng  
+    tình cảm anh dành cho em không phải là thoáng qua,  
+    không phải vì anh cô đơn
+    mà là vì chính em
+    anh biết là anh vẫn còn vụng về trong tình yêu lắm
+    nên nếu như anh làm sai điều gì
+    mong embe lượng thứ cho thần thiếp...
+    chứ embe đưng im lặng với anh aaa
+    anh so lamm  
+    vì anh muốn đi xa hơn với em maaa.<br><br>
+
+    Anh chỉ muôn rằng 
+    Anh thương embe của anh nhiều lắm
+    Tình cảm của anh là thật.  
+    Anh trân trọng em  
+    và trân trọng tất cả những gì chúng ta có.<br><br>
+
+    Vậy nên…  
+    cho phép anh bước vào cuộc sống của em  
+    với một tư cách nghiêm túc hơn nhé.  
+    Anh muốn quan tâm em,  
+    muốn là người ở cạnh em  
+    những lúc em mệt mỏi và yếu lòng nhất.<br><br>
+
+    <strong>Anh yêu vợ ❤️</strong>
+  </p>
+`;
+    card.style.opacity = 1;
+  },800);
+}
+</script>
+
+</body>
+</html>
