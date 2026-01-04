@@ -126,7 +126,7 @@ async function loadAuthorizedFace(){
     [detection.descriptor]
   );
 
-  faceMatcher = new faceapi.FaceMatcher(labeled, 0.6);
+  faceMatcher = new faceapi.FaceMatcher(labeled, 0.5);
 }
 
 // nút bắt đầu
@@ -311,6 +311,7 @@ function unlock(){
 </body>
 
 </html>
+
 
 
 
